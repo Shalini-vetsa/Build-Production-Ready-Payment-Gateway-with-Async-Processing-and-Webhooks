@@ -57,7 +57,7 @@ A fully functional **production-style payment gateway** built with:
 ## 1️ Clone Repository
 
 ```bash
-git clone https://github.com/SRINIJA-PULLIPUDI/Build-Production-Ready-Payment-Gateway-with-Async-Processing-and-Webhooks.git
+git clone https://github.com/Shalini-vetsa/Build-Production-Ready-Payment-Gateway-with-Async-Processing-and-Webhooks.git
 cd Build-Production-Ready-Payment-Gateway-with-Async-Processing-and-Webhooks.git
 ```
 
@@ -409,5 +409,6 @@ This project simulates a real-world payment gateway system with:
 - Containerized infrastructure
 
 Designed to mirror production-grade payment gateway architecture.
+
 
 ---
