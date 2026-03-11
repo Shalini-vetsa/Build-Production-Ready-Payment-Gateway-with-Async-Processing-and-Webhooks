@@ -1,0 +1,41 @@
+version: 1
+
+project:
+  name: production-ready-payment-gateway
+  description: Async payment gateway with webhooks, refunds, idempotency and Redis worker
+
+setup:
+  commands:
+    - echo "Building Docker images..."
+    - docker-compose build
+
+start:
+  commands:
+    - echo "Starting all services..."
+    - docker-compose up -d
+
+verify:
+  commands:
+    - echo "Checking API health..."
+    - curl -f http://localhost:8000/health || exit 1
+    - echo "Checking running containers..."
+    - docker ps | grep gateway_api || exit 1
+    - docker ps | grep redis || exit 1
+    - docker ps | grep pg_gateway || exit 1
+
+test:
+  commands:
+    - echo "Running basic API contract tests..."
+
+    # Create Order
+    - |
+      curl -s -X POST http://localhost:8000/api/v1/orders \
+      -H "Content-Type: application/json" \
+      -H "x-api-key: key_test_abc123" \
+      -H "X-Api-Secret: secret_test_xyz789" \
+      -d '{"amount":5000}' | grep "order_" || exit 1
+
+shutdown:
+  commands:
+    - echo "Stopping services..."
+    - docker-compose down

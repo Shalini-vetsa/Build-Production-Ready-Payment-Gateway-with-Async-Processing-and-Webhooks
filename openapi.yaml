@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+  title: Production Payment Gateway API
+  version: 1.0.0
+  description: >
+    Async payment gateway API with idempotency, refunds,
+    webhook delivery and Redis-based job processing.
+
+servers:
+  - url: http://localhost:8000
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+    ApiSecretAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Secret
+
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+        status:
+          type: string
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        method:
+          type: string
+        amount:
+          type: integer
+
+    Refund:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        amount:
+          type: integer
+        reason:
+          type: string
+
+security:
+  - ApiKeyAuth: []
+  - ApiSecretAuth: []
+
+paths:
+
+  /health:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: Service healthy
+
+  /api/v1/orders:
+    post:
+      summary: Create Order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: integer
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /api/v1/payments:
+    post:
+      summary: Create Payment
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_id
+                - method
+              properties:
+                order_id:
+                  type: string
+                method:
+                  type: string
+                  enum: [upi, card]
+                vpa:
+                  type: string
+                card:
+                  type: object
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+  /api/v1/payments/{id}/capture:
+    post:
+      summary: Capture Payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment captured
+
+  /api/v1/payments/{id}/refunds:
+    post:
+      summary: Create Refund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+              properties:
+                amount:
+                  type: integer
+                reason:
+                  type: string
+      responses:
+        '201':
+          description: Refund created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+
+  /api/v1/refunds/{id}:
+    get:
+      summary: Get Refund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Refund details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
